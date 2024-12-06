@@ -33,6 +33,59 @@
             text: 'Sort files'
             size_hint_y: None
             height: 50
+        BoxLayout:
+            orientation: 'vertical'
+            padding: 10
+            GridLayout:
+                cols: 2
+                size_hint_y: None
+                padding: 10
+                Label:
+                    text: 'Select sorting method'
+                    font_size: 15
+                    height: 30
+                Spinner:
+                    id: sort_method
+                    text: 'Select sorting method'
+                    values: ['Sort by types', 'Sort by size', 'Sort by date'] # maybe will change later, we will see if I manage to implement them
+                    size_hint_y: None
+                    height: 30
+                Label:
+                    text: 'Which directories or files to sort?'
+                    font_size: 15
+                    height: 30
+                Button:
+                    text: 'Select directories/files'
+                    on_press: root.select_directories()
+                    size_hint_y: None
+                    height: 30
+                Label:
+                    text: 'Use original files or copies?'
+                    font_size: 15
+                    height: 30
+                Spinner:
+                    id: original_files
+                    text: 'Select action'
+                    values: ['Use original files', 'Use copies']
+                    size_hint_y: None
+                    height: 30
+            Button:
+                text: 'Sort'
+                on_press: root.sort()
+                size_hint_y: None
+                height: 50
+        ScrollView:
+            GridLayout:
+                id: sort_results
+                cols: 1
+                size_hint_y: None
+                height: 100
+                padding: 10
+                spacing: 10
+                Label:
+                    text: 'Sort results will be here'
+                    size_hint_y: None
+                    height: 30
         GridLayout:
             cols: 2
             size_hint_y: None
@@ -76,7 +129,7 @@
                     font_size: 15
                     height: 30
                 Button:
-                    text: 'Select directories'
+                    text: 'Select directories/files'
                     on_press: root.select_directories() # This will be a popup
                     size_hint_y: None
                     height: 30
@@ -86,54 +139,60 @@
                 size_hint_y: None
                 height: 50
         ScrollView:
-            
             GridLayout:
+                id: search_results
                 cols: 1
-                padding: 20
-                GridLayout:
-                    id: search_results_file_selection_header
-                    cols: 2
+                size_hint_y: None
+                height: 100
+                padding: 10
+                spacing: 10
+                Label:
+                    text: 'Search results will be here'
                     size_hint_y: None
-                    padding: 20
-                    Label:
-                        text: 'Name of file'
-                        font_size: 15
-                        height: 30
-                    Label:
-                        text: 'Directory of file'
-                        font_size: 15
-                        height: 30
-                    GridLayout:
-                        id: search_results_file_selection_menu
-                        cols: 2
-                        size_hint_y: None
-                        padding: 20
-                GridLayout:
-                    id: search_results_main
-                    cols: 2
-                    Label:
-                        id: search_results_main
-                        text: 'Search results will be here'
-                        size_hint_y: None
-                        height: 50
-                    GridLayout:
-                        id: search_results
-                        cols: 2
-                        size_hint_y: None
-                        padding: 20
+                    height: 30
 
         GridLayout:
             cols: 2
             size_hint_y: None
             padding: 20
             Button:
-                text: 'Main Menu'
-                on_press: root.main_menu_screen()
-                size_hint: (0.5, 0.5)
-                padding: 10
-            Button:
                 text: 'Sort Files'
                 on_press: root.sort_files_screen()
                 size_hint: (0.5, 0.5)
                 padding: 10
-        
+            Button:
+                text: 'Main Menu'
+                on_press: root.main_menu_screen()
+                size_hint: (0.5, 0.5)
+                padding: 10
+
+<File_selecting_popup>
+    title: 'Selecting files'
+    size_hint: (0.8, 0.8)
+    auto_dismiss: False
+    caller: None
+    BoxLayout:
+        orientation: 'vertical'
+        padding: 10
+        Label:
+            text: 'Select directories or files'
+            font_size: 20
+            size_hint_y: None
+            size_hint: (1, 0.3)
+        FileChooserListView:
+            id: filechooser
+            # will need to set this up later on
+        GridLayout:
+            cols: 2
+            size_hint_y: None
+            padding: 20
+            Button:
+                text: 'Cancel'
+                on_press: root.cancel()
+                size_hint: (0.5, 0.5)
+                padding: 10
+            Button:
+                text: 'Select'
+                on_press: root.select()
+                size_hint: (0.5, 0.5)
+                padding: 10
