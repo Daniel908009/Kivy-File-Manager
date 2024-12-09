@@ -102,6 +102,7 @@
                 padding: 10
 
 <Key_Word_SearchScreen>
+    all_selected_files: []
     BoxLayout:
         orientation: 'vertical'
         size_hint: (1, 1)
@@ -130,7 +131,7 @@
                     height: 30
                 Button:
                     text: 'Select directories/files'
-                    on_press: root.select_directories() # This will be a popup
+                    on_press: root.select_directories()
                     size_hint_y: None
                     height: 30
             Button:
@@ -140,14 +141,14 @@
                 height: 50
         ScrollView:
             GridLayout:
-                id: search_results
+                id: selected
                 cols: 1
                 size_hint_y: None
-                height: 100
+                height: 0
                 padding: 10
                 spacing: 10
                 Label:
-                    text: 'Search results will be here'
+                    text: 'Selected files will be here'
                     size_hint_y: None
                     height: 30
 
@@ -181,7 +182,8 @@
             size_hint: (1, 0.3)
         FileChooserListView:
             id: filechooser
-            # will need to set this up later on
+            dirselect: True
+            filters: ['*.txt'] # this will maybe change later
         GridLayout:
             cols: 2
             size_hint_y: None
@@ -196,3 +198,62 @@
                 on_press: root.select()
                 size_hint: (0.5, 0.5)
                 padding: 10
+
+<KeyWordsResults>
+    title: 'Results'
+    BoxLayout:
+        orientation: 'vertical'
+        size_hint: (0.9, 0.9)
+        Label:
+            text: 'Results'
+            size_hint_y: None
+            font_size: 50
+            height: 50
+        ScrollView:
+            GridLayout:
+                id: results_search
+                cols: 1
+                size_hint_y: None
+                height: 200
+                padding: 10
+                spacing: 10
+        Button:
+            size_hint_y: None
+            height: 50
+            text: 'Close'
+            on_press: root.dismiss()
+
+<ResultWidget>
+    cols: 3
+    height: 25
+    Label:
+        id: name
+        text: ''
+        size_hint_x: 0.5
+    Label:
+        id: count
+        text: ''
+        size_hint_x: 0.5
+    Button:
+        text: 'Show'
+        #on_press: root.show_file() # will be done later
+        size_hint_x: 0.5
+
+<FileWidget>
+    cols: 3
+    path: ''
+    caller: None
+    size_hint: (1, None)
+    height: 50
+    Label:
+        id: name
+        text: ''
+        size_hint_x: 0.5
+    Label:
+        id: size
+        text: ''
+        size_hint_x: 0.5
+    Button:
+        text: 'Remove'
+        on_press: root.remove_file()
+        size_hint_x: 0.5
