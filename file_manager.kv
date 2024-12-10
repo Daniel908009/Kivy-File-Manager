@@ -10,7 +10,8 @@
             height: 200
             color: 0, 0, 1, 1
         Label:
-            text: 'Something interesting will be here' # I thought about adding some random jokes here from a file, we will see if I will get to it later
+            text: 'Some jokes will later show up here'
+            #text: root.get_joke()
             size_hint_y: None
             height: 200
         GridLayout:
@@ -18,18 +19,20 @@
             size_hint_y: None
             padding: 20
             Button:
-                text: 'Find keywords'
+                text: 'Find Keywords'
                 on_press: root.find_keywords_screen()
                 size_hint: (0.5, 0.5)
                 padding: 10
             Button:
-                text: 'Sort files'
+                text: 'Sort Files'
                 on_press: root.sort_files_screen()
                 size_hint: (0.5, 0.5)
                 padding: 10
 
 # screen for sorting files
 <File_SortScreen>
+    all_selected_files: []
+    size_bariers: []
     BoxLayout:
         orientation: 'vertical'
         size_hint: (1, 1)
@@ -55,7 +58,7 @@
                 Spinner:
                     id: sort_method
                     text: 'Select sorting method'
-                    values: ['Sort by types', 'Sort by size', 'Sort by date'] # maybe will change later, we will see if I manage to implement them
+                    values: ['Sort by types', 'Sort by size', 'Sort by date']
                     size_hint_y: None
                     height: 45
                 Label:
@@ -79,20 +82,21 @@
                     height: 45
         Button:
             text: 'Sort'
-            #on_press: root.sort() # will be done later
+            on_press: root.sort()
             size_hint_y: None
             size_hint: (1, 0.2)
             height: 50
 
         ScrollView:
             GridLayout:
-                id: sort_results
+                id: selected
                 cols: 1
                 size_hint_y: None
                 height: 0
                 padding: 10
                 spacing: 10
                 Label:
+                    id: selected_files_title
                     text: 'Files selected for sorting will be here'
                     font_size: 20
                     size_hint_y: None
@@ -186,7 +190,7 @@
 
 # popup for file and directory selection
 <File_selecting_popup>
-    title: 'Selecting files'
+    title: 'Selecting Files'
     size_hint: (0.8, 0.8)
     auto_dismiss: False
     caller: None
@@ -201,7 +205,6 @@
         FileChooserListView:
             id: filechooser
             dirselect: True
-            filters: ['*.txt'] # this will maybe change later
         GridLayout:
             cols: 2
             size_hint_y: None
@@ -293,3 +296,67 @@
         text: 'Remove'
         on_press: root.remove_file()
         size_hint_x: 0.5
+
+# this popup is used to get the size bariers for the sorting by size option
+<SizeBariersPopup>
+    title: 'Size Bariers'
+    size_hint: (0.9, 0.9)
+    auto_dismiss: False
+    caller: None
+    selected: []
+    BoxLayout:
+        orientation: 'vertical'
+        padding: 10
+        Label:
+            text: 'Create the size bariers'
+            font_size: 20
+            size_hint_y: None
+            size_hint: (1, 0.3)
+        GridLayout:
+            cols: 3
+            size_hint_y: None
+            padding: 10
+            Label:
+                text: 'Enter size barier in bytes'
+                font_size: 20
+                height: 45
+            TextInput:
+                id: size_barier
+                halign: 'right'
+                size_hint_y: None
+                height: 45
+                font_size: 20
+                input_filter: 'int'
+            Button:
+                text: 'Add'
+                on_press: root.add()
+                size_hint_y: None
+                height: 45
+        ScrollView:
+            GridLayout:
+                id: selected
+                cols: 1
+                size_hint_y: None
+                height: 0
+                padding: 10
+                spacing: 10
+                Label:
+                    id: selected_files_title
+                    text: 'Size bariers will be displayed here'
+                    font_size: 20
+                    size_hint_y: None
+                    height: 30
+        GridLayout:
+            cols: 2
+            size_hint_y: None
+            padding: 20
+            Button:
+                text: 'Cancel'
+                on_press: root.cancel()
+                size_hint: (0.5, 0.5)
+                padding: 10
+            Button:
+                text: 'Select'
+                on_press: root.select()
+                size_hint: (0.5, 0.5)
+                padding: 10
