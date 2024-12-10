@@ -5,8 +5,11 @@
 ## Features
 <p>Grouping files based on type, size or date</p>
 <p>Finding keywords in files</p>
+<p>More features will be added later</p>
 
 ## Screenshots
+![image](https://github.com/user-attachments/assets/c2e51ea8-1080-4668-8020-9ded64a57b08)
+![image](https://github.com/user-attachments/assets/4eb56da4-af41-450e-b25c-1a14c68ecfc4)
 
 ## To do
 [X] All three screens<br>
