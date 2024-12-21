@@ -47,5 +47,5 @@ Now open a console and enter the folowing code: pip install -r /path/to/requirem
 *Replace the /path/to/requirements.txt with the actual path. <br>
 Enjoy! <br>
 <h2>Using Pypi</h2>
-simply open your command prompt and enter this command: pip install kivy_file_manager_package <br>
-then you can run it with this command:  python3 -m kivy_file_manager_package.main
+simply open your command prompt and enter this command: pip install kivy-file-manager-package <br>
+then you can run it with this command: kivy_file_manager_package
