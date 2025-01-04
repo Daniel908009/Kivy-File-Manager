@@ -10,7 +10,8 @@ current_directory = os.getcwd()
 # popup that is used for selecting files in the key word search screen, maybe will be enhanced to cover both screens in the future
 class File_selecting_popup(Popup):
     
-    def send_info(self, caller, filter_files):
+    def __init__(self, caller, filter_files):
+        super().__init__()
         self.caller = caller
         self.ids.filechooser.path = current_directory
         if filter_files != None:
@@ -31,14 +32,12 @@ class File_selecting_popup(Popup):
                     files = os.listdir(path) 
                     for thing in files:
                         if os.path.isfile(path + "/" + thing): # directories inside directories will for now be ignored maybe in the future I will figure out some way to add a system for that
-                            file_widget = FileWidget()
-                            file_widget.set_info(path + "/" + thing, thing, self.caller)
+                            file_widget = FileWidget(path + "/" + thing, thing, self.caller)
                             self.caller.ids.selected.add_widget(file_widget)
                             self.caller.all_selected_files.append(path + "/" + thing)
                             self.caller.ids.selected.height += 70
                 else:    
-                    file_widget = FileWidget()
-                    file_widget.set_info(path, name, self.caller)
+                    file_widget = FileWidget(path, name, self.caller)
                     self.caller.ids.selected.add_widget(file_widget)
                     self.caller.all_selected_files.append(file)
                     self.caller.ids.selected.height += 70
@@ -47,7 +46,8 @@ class File_selecting_popup(Popup):
 # widget for displaying selected files in the scroll view
 class FileWidget(GridLayout):
 
-    def set_info(self, path, name, caller):
+    def __init__(self, path, name, caller):
+        super().__init__()
         self.ids.name.text = name
         self.path = path
         self.caller = caller
@@ -73,51 +73,69 @@ class Key_Word_SearchScreen(Screen):
         self.manager.current = 'file_sort'
 
     def select_directories(self):
-        popup = File_selecting_popup()
-        popup.send_info(self, ['*.txt', '*.json']) # will most likely be changed, I just need to test it some things first
+        popup = File_selecting_popup(self, None)
         popup.open()
 
     def search(self):
-        keyword = self.ids.keyword.text
+        keywords = self.ids.keyword.text.split(",")
+        for k in keywords:
+            keywords[keywords.index(k)] = k.strip()
         results = []
-        if keyword != "" and len(self.all_selected_files) > 0:
-            temp = 0
+        #print(keywords)
+        if len(self.all_selected_files) > 0 and keywords != ['']:
             for file_path in self.all_selected_files:
-                file = open(file_path, "r")
-                lines = file.readlines()
-                for line in lines:
-                    if keyword in line:
-                        temp += 1
-                file.close()
+                temp = 0
+                for keyword in keywords:
+                    file = open(file_path, "r")
+                    lines = file.readlines()
+                    for line in lines:
+                        for word in line.split(" "):
+                            if keyword in word:
+                                temp += 1
+                    file.close()
                 name = file.name.split("/")[-1]
                 results.append([name, temp])
-                temp = 0
-            res_pop = KeyWordsResults()
-            res_pop.send_info(results)
+            res_pop = KeyWordsResults(results, self.all_selected_files)
             res_pop.open()
-        else:
-            pass
 
 # popup for displaying the results of the keyword search
 class KeyWordsResults(Popup):
 
-    def send_info(self, results):
+    def __init__(self, results, paths):
+        super().__init__()
         self.ids.results_search.clear_widgets()
+        self.paths = paths
         for result in results:
-            result_widget = ResultWidget()
-            result_widget.set_info(result[0], result[1])
+            result_widget = ResultWidget(result[0], result[1], self.paths[results.index(result)])
             self.ids.results_search.add_widget(result_widget)
             self.ids.results_search.height += 70
 
 # widget for displaying the results of the keyword search inside the results popup
 class ResultWidget(GridLayout):
 
-    def set_info(self, name, count):
+    def __init__(self, name, count, path):
+        super().__init__()
         self.ids.name.text = name
         self.ids.count.text = str(count)
+        self.path = path
         if count > 0:
             self.ids.count.color = 0, 1, 0, 1
             self.ids.name.color = 0, 1, 0, 1
+    def show_file(self):
+        popup = FileContentPopup(self.path)
+        popup.open()
+
+# popup for displaying the content of a file
+class FileContentPopup(Popup):
+    def __init__(self, path):
+        super().__init__()
+        file = open(path, "r")
+        lines = file.readlines()
+        text = ""
+        for line in lines:
+            text += line
+        file.close()
+        self.ids.content.text = text
 
 # screen for sorting files
 class File_SortScreen(Screen):
@@ -133,8 +151,7 @@ class File_SortScreen(Screen):
         self.manager.current = 'key_word_search'
 
     def select_directories(self):
-        popup = File_selecting_popup()
-        popup.send_info(self, None)
+        popup = File_selecting_popup(self, None)
         popup.open()
 
     def sort(self):
@@ -173,8 +190,7 @@ class File_SortScreen(Screen):
     def sort_by_size_pop(self):
         # getting the size bariers
         self.size_bariers = []
-        sizeBariersPop = SizeBariersPopup()
-        sizeBariersPop.send_info(self)
+        sizeBariersPop = SizeBariersPopup(self)
         sizeBariersPop.open()
 
     def sort_by_date(self):
@@ -213,7 +229,8 @@ class File_SortScreen(Screen):
 
 # popup used for selecting size bariers
 class SizeBariersPopup(Popup):
-    def send_info(self, caller):
+    def __init__(self, caller):
+        super().__init__()
         self.caller = caller
     def cancel(self):
         self.dismiss()
