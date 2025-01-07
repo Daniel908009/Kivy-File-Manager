@@ -81,7 +81,6 @@ class Key_Word_SearchScreen(Screen):
         for k in keywords:
             keywords[keywords.index(k)] = k.strip()
         results = []
-        #print(keywords)
         if len(self.all_selected_files) > 0 and keywords != ['']:
             for file_path in self.all_selected_files:
                 temp = 0
@@ -161,7 +160,7 @@ class File_SortScreen(Screen):
             elif self.ids.sort_method.text == 'Sort by size':
                 self.sort_by_size_pop()
             elif self.ids.sort_method.text == 'Sort by date':
-                self.sort_by_date()
+                self.sort_by_date_pop()
     
     def sort_by_types(self):
         # getting all the types of the selected files
@@ -174,7 +173,8 @@ class File_SortScreen(Screen):
                     types.append(type)
         # creating directories for each type
         for type in types:
-            os.mkdir(current_directory + "/" + type + "_files")
+            if not os.path.exists(current_directory + "/" + type + "_files"):
+                os.mkdir(current_directory + "/" + type + "_files")
         # moving the files to the directories or copying them, depends on the selected action
         if self.ids.original_files.text == 'Use original files':
             for file in self.all_selected_files:
@@ -193,8 +193,10 @@ class File_SortScreen(Screen):
         sizeBariersPop = SizeBariersPopup(self)
         sizeBariersPop.open()
 
-    def sort_by_date(self):
-        pass # will be implemented later
+    def sort_by_date_pop(self):
+        self.date_bariers = []
+        dateBariersPop = DateBariersPopup(self)
+        dateBariersPop.open()
     
     def sort_by_size(self):
         # adding zero to the size bariers in case it isnt there
@@ -227,6 +229,70 @@ class File_SortScreen(Screen):
                 if size >= self.size_bariers[-1]:
                     os.system("cp " + file + " " + current_directory + "/" + str(self.size_bariers[-1]) + "and_more_files/" + name)
 
+# popup used for selecting date bariers
+class DateBariersPopup(Popup):
+    def __init__(self, caller):
+        super().__init__()
+        self.caller = caller
+        self.selected = []
+    def add(self):
+        self.ids.selected_files_title.text = "Selected Date Bariers"
+        if self.ids.time.text != "" and self.ids.time.text not in self.selected and len(self.ids.time.text) >= 4:
+            self.ids.selected.add_widget(DateWidget(self.ids.time.text, self))
+            self.ids.selected.height += 50
+            self.ids.time.text = ""
+    def select(self):
+        if len(self.selected) > 0:
+            for barier in self.selected:
+                b = int(barier[:4]) * 31536000
+                b+= int(barier[6:7]) * 2592000
+                b+= int(barier[9:10]) * 86400
+                b+= int(barier[12:13]) * 3600
+                b+= int(barier[15:16]) * 60
+                b+= int(barier[18:19])
+                self.caller.date_bariers.append(b)
+            self.caller.sort_by_date()
+            self.dismiss()
+    def textInput(self):
+        if len(self.ids.time.text) > 14:
+            self.ids.time.text = self.ids.time.text[:14]
+
+# widget used in the date bariers popup
+class DateWidget(GridLayout):
+    def __init__(self, date, caller):
+        super().__init__()
+        text = date[:4]
+        if len(date) > 5:
+            text += "-" + date[4:6]
+            if len(date) > 7:
+                text += "-" + date[6:8]
+                if len(date) > 9:
+                    text += " " + date[8:10]
+                    if len(date) > 11:
+                        text += ":" + date[10:12]
+                        if len(date) > 13:
+                            text += ":" + date[12:]
+                        else:
+                            text += ":00"
+                    else:
+                        text += ":00:00"
+                else:
+                    text += " 00:00:00"
+            else:
+                text += "-01 00:00:00"
+        else:
+            text += "-01-01 00:00:00"
+        self.ids.date.text = text
+        self.caller = caller
+        self.caller.selected.append(text)
+    def remove(self):
+        text = self.ids.date.text
+        self.caller.ids.selected.remove_widget(self)
+        self.caller.selected.remove(text)
+        self.caller.ids.selected.height -= 50
+        if len(self.caller.selected) == 0:
+            self.caller.ids.selected_files_title.text = "Selected Date Bariers will be here"
+
 # popup used for selecting size bariers
 class SizeBariersPopup(Popup):
     def __init__(self, caller):
@@ -238,14 +304,28 @@ class SizeBariersPopup(Popup):
         self.ids.selected_files_title.text = "Selected Size Bariers"
         if self.ids.size_barier.text != "" and self.ids.size_barier.text not in self.selected:
             self.selected.append(self.ids.size_barier.text)
-            self.ids.selected.add_widget(Label(text=self.ids.size_barier.text, height=70, font_size=20)) # later will be widget
-            self.ids.selected.height += 70
+            self.ids.selected.add_widget(SizeWidget(self.ids.size_barier.text, self))
+            self.ids.selected.height += 50
             self.ids.size_barier.text = ""
     def select(self):
-        for barier in self.selected:
-            self.caller.size_bariers.append(int(barier))
-        self.caller.sort_by_size()
-        self.dismiss()
+        if len(self.selected) > 0:
+            for barier in self.selected:
+                self.caller.size_bariers.append(int(barier))
+            self.caller.sort_by_size()
+            self.dismiss()
+
+# widget used in the size bariers popup
+class SizeWidget(GridLayout):
+    def __init__(self, size, caller):
+        super().__init__()
+        self.ids.size.text = size
+        self.caller = caller
+    def remove(self):
+        self.caller.ids.selected.remove_widget(self)
+        self.caller.selected.remove(self.ids.size.text)
+        self.caller.ids.selected.height -= 50
+        if len(self.caller.selected) == 0:
+            self.caller.ids.selected_files_title.text = "Selected Size Bariers will be here"
 
 # main/opening screen
 class MainScreen(Screen):
