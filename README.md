@@ -1,29 +1,42 @@
 # kivy_file_manager
 ## What is it?
-<p>This project is a file manager with multiple features, build in Kivy(multiplatform, naturaly resizable framework)</p>
+<p>This project is a file manager app build in Kivy(multiplatform, naturaly resizable framework, that is licensed under the MIT license)</p>
 
 ## Features
-<p>Grouping files based on type, size or date</p>
+<p>Grouping files based on types, sizes or dates</p>
 <p>Finding keywords in files</p>
-<p>More features will be added later</p>
+
+## Run using Pypi/HighSeas demo link
+simply open your command prompt and enter this command: pip install kivy-file-manager-package <br>
+then you can run it with this command: kivy_file_manager_package
 
 ## Screenshots
-![image](https://github.com/user-attachments/assets/c2e51ea8-1080-4668-8020-9ded64a57b08)
-![image](https://github.com/user-attachments/assets/4eb56da4-af41-450e-b25c-1a14c68ecfc4)
+![image](https://github.com/user-attachments/assets/b7b29d09-e19b-4976-8ea1-e6286194886e)
+![image](https://github.com/user-attachments/assets/4b60bf78-ba88-4dd2-9648-83cc37e27624)
+![image](https://github.com/user-attachments/assets/eee81a0f-ed1b-47d6-980d-4f3f69977016)
+![image](https://github.com/user-attachments/assets/7a2ad866-61d0-493c-b291-d52d76c3d557)
+![image](https://github.com/user-attachments/assets/b60b937d-6e3a-4366-988c-5f1be133673e)
+<p>This entering menu is pretty much the same as the entering menu for the size bariers.</p>
+
+![image](https://github.com/user-attachments/assets/33ca566a-6fec-458b-8ce8-ae13f7a484e7)
+
 
 ## To do
-[X] All three screens<br>
-[X] Basic functions<br>
-[X] Using same popup for selection of the files in all screens<br>
-[X] Option to use copies of files (this is more safe)<br>
-[X] Sorting by types<br>
-[X] Sorting by sizes<br>
-[X] Option for searching keywords in files<br>
-[] add show file popup (this will show contents of a file) <br>
-[] add option to group files by dates<br>
-[] add jokes to the opening screen <br>
-[] advanced loading of files and directories<br>
-[] make the functions work with files that have spaces in name, currently this causes an error <br>
+- [X] All three screens<br>
+- [X] Basic functions<br>
+- [X] Using same popup for selection of the files in all screens<br>
+- [X] Option to use copies of files (this is more safe)<br>
+- [X] Sorting by types<br>
+- [X] Sorting by sizes<br>
+- [X] Option for searching keywords in files<br>
+- [X] add show file popup (this will show contents of a file and allow modifications of the file) <br>
+- [X] add option to group files by dates<br>
+- [X] better UI<br>
+- [X] searching multiple keywords at once<br>
+- [X] fix copy files bug<br>
+- [X] make a fully working package to Pypi<br>
+- [ ] advanced loading of files and directories<br>
+- [ ] make the functions work with files that have spaces in name, currently this causes an error <br>
 
 <h1>Download instructions</h1>
 *Note the links are instructional images <br>
@@ -46,6 +59,3 @@ If you dont have git than first enter the folowing command: sudo apt install git
 Now open a console and enter the folowing code: pip install -r /path/to/requirements.txt <br>
 *Replace the /path/to/requirements.txt with the actual path. <br>
 Enjoy! <br>
-<h2>Using Pypi</h2>
-simply open your command prompt and enter this command: pip install kivy-file-manager-package <br>
-then you can run it with this command: kivy_file_manager_package
