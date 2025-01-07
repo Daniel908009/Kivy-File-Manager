@@ -35,8 +35,8 @@ then you can run it with this command: kivy_file_manager_package
 - [X] searching multiple keywords at once<br>
 - [X] fix copy files bug<br>
 - [X] make a fully working package to Pypi<br>
-- [ ] advanced loading of files and directories<br>
-- [ ] make the functions work with files that have spaces in name, currently this causes an error <br>
+- [X] advanced loading of files and directories(was done using recursion)<br>
+- [X] make the functions work with files that have spaces in name, currently this causes an error <br>
 
 <h1>Download instructions</h1>
 *Note the links are instructional images <br>
