@@ -4,6 +4,7 @@ from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager, Screen, SlideTransition
 from kivy.uix.popup import Popup
 import os
+import shutil
 # getting the current directory
 current_directory = os.getcwd()
 
@@ -25,23 +26,20 @@ class File_selecting_popup(Popup):
         # getting the selected files
         selected_files = self.ids.filechooser.selection
         for file in selected_files:
-            name = file.split("/")[-1]
-            path = file
-            if path not in self.caller.all_selected_files:
-                if os.path.isdir(path):
-                    files = os.listdir(path) 
-                    for thing in files:
-                        if os.path.isfile(path + "/" + thing): # directories inside directories will for now be ignored maybe in the future I will figure out some way to add a system for that
-                            file_widget = FileWidget(path + "/" + thing, thing, self.caller)
-                            self.caller.ids.selected.add_widget(file_widget)
-                            self.caller.all_selected_files.append(path + "/" + thing)
-                            self.caller.ids.selected.height += 70
-                else:    
-                    file_widget = FileWidget(path, name, self.caller)
-                    self.caller.ids.selected.add_widget(file_widget)
-                    self.caller.all_selected_files.append(file)
-                    self.caller.ids.selected.height += 70
+            if file not in self.caller.all_selected_files:
+                self.selectRecursive(file)
         self.dismiss()
+    def selectRecursive(self, path):
+        if os.path.isdir(path):
+            files = os.listdir(path) 
+            for thing in files:
+                self.selectRecursive(path + "/" + thing)
+        else:
+            name = path.split("/")[-1]
+            file_widget = FileWidget(path, name, self.caller)
+            self.caller.ids.selected.add_widget(file_widget)
+            self.caller.all_selected_files.append(path)
+            self.caller.ids.selected.height += 70
 
 # widget for displaying selected files in the scroll view
 class FileWidget(GridLayout):
@@ -128,6 +126,7 @@ class ResultWidget(GridLayout):
 class FileContentPopup(Popup):
     def __init__(self, path):
         super().__init__()
+        self.path = path
         file = open(path, "r")
         lines = file.readlines()
         text = ""
@@ -135,6 +134,11 @@ class FileContentPopup(Popup):
             text += line
         file.close()
         self.ids.content.text = text
+    def save(self):
+        file = open(self.path, "w")
+        file.write(self.ids.content.text)
+        file.close()
+        self.dismiss()
 
 # screen for sorting files
 class File_SortScreen(Screen):
@@ -185,7 +189,7 @@ class File_SortScreen(Screen):
             for file in self.all_selected_files:
                 name = file.split("/")[-1]
                 type = name.split(".")[-1]
-                os.system("cp " + file + " " + current_directory + "/" + type + "_files/" + name)
+                shutil.copy(file, current_directory + "/" + type + "_files/" + name)
     
     def sort_by_size_pop(self):
         # getting the size bariers
@@ -225,10 +229,48 @@ class File_SortScreen(Screen):
                 size = os.path.getsize(file)
                 for i in range(len(self.size_bariers) - 1):
                     if size >= self.size_bariers[i] and size < self.size_bariers[i + 1]:
-                        os.system("cp " + file + " " + current_directory + "/" + str(self.size_bariers[i]) + "-" + str(self.size_bariers[i + 1]) + "_files/" + name)
+                        shutil.copy(file, current_directory + "/" + str(self.size_bariers[i]) + "-" + str(self.size_bariers[i + 1]) + "_files/" + name)
                 if size >= self.size_bariers[-1]:
-                    os.system("cp " + file + " " + current_directory + "/" + str(self.size_bariers[-1]) + "and_more_files/" + name)
-
+                    shutil.copy(file, current_directory + "/" + str(self.size_bariers[-1]) + "and_more_files/" + name)
+        self.size_bariers = []
+    def sort_by_date(self): # this is basically the same as the size sorting
+        # adding zero to the date bariers in case it isnt there
+        if 0 not in self.date_bariers:
+            self.date_bariers.append(0)
+        # reordering the date bariers
+        self.date_bariers.sort()
+        # creating directories for between the date bariers
+        for i in range(len(self.date_bariers) - 1):
+            os.mkdir(current_directory + "/" + str(self.date_bariers[i]) + "-" + str(self.date_bariers[i + 1]) + "_files")
+        # adding the final directory for everything above the last date barier
+        os.mkdir(current_directory + "/" + str(self.date_bariers[-1]) + "and_more_files")
+        # moving the files to the directories or copying them, depends on the selected action
+        if self.ids.original_files.text == 'Use original files':
+            for file in self.all_selected_files:
+                name = file.split('/')[-1]
+                date = os.path.getmtime(file)
+                date += 1970 * 31536000 # these additions are here because the date is in seconds since the first of january 1970
+                date += 1 * 2592000
+                date += 1 * 86400
+                for i in range(len(self.date_bariers) - 1):
+                    if date >= self.date_bariers[i] and date < self.date_bariers[i + 1]:
+                        os.rename(file, current_directory + "/" + str(self.date_bariers[i]) + "-" + str(self.date_bariers[i + 1]) + "_files/" + name)
+                if date >= self.date_bariers[-1]:
+                    os.rename(file, current_directory + "/" + str(self.date_bariers[-1]) + "and_more_files/" + name)
+        elif self.ids.original_files.text == 'Use copies':
+            for file in self.all_selected_files:
+                name = file.split('/')[-1]
+                date = os.path.getmtime(file)
+                date += 1970 * 31536000
+                date += 1 * 2592000
+                date += 1 * 86400
+                for i in range(len(self.date_bariers) - 1):
+                    if date >= self.date_bariers[i] and date < self.date_bariers[i + 1]:
+                        shutil.copy(file, current_directory + "/" + str(self.date_bariers[i]) + "-" + str(self.date_bariers[i + 1]) + "_files/" + name)
+                if date >= self.date_bariers[-1]:
+                    shutil.copy(file, current_directory + "/" + str(self.date_bariers[-1]) + "and_more_files/" + name)
+        self.date_bariers = []
+        
 # popup used for selecting date bariers
 class DateBariersPopup(Popup):
     def __init__(self, caller):
@@ -238,9 +280,10 @@ class DateBariersPopup(Popup):
     def add(self):
         self.ids.selected_files_title.text = "Selected Date Bariers"
         if self.ids.time.text != "" and self.ids.time.text not in self.selected and len(self.ids.time.text) >= 4:
-            self.ids.selected.add_widget(DateWidget(self.ids.time.text, self))
-            self.ids.selected.height += 50
-            self.ids.time.text = ""
+            if int(self.ids.time.text[:4]) > 1970:
+                self.ids.selected.add_widget(DateWidget(self.ids.time.text, self))
+                self.ids.selected.height += 50
+                self.ids.time.text = ""
     def select(self):
         if len(self.selected) > 0:
             for barier in self.selected:
@@ -329,9 +372,6 @@ class SizeWidget(GridLayout):
 
 # main/opening screen
 class MainScreen(Screen):
-
-    def get_joke(self): # this is will be done later
-        pass
 
     def find_keywords_screen(self):
         self.manager.transition = SlideTransition(direction='right')

@@ -9,13 +9,13 @@
             text: 'File Manager'
             size_hint_y: None
             font_size: 60
-            height: 200
+            size_hint: (1, 0.3)
             color: 0, 0, 1, 1
         Label:
-            text: 'Some jokes will later show up here'
-            #text: root.get_joke()
+            text: 'Welcome to the file manager'
+            font_size: 30
             size_hint_y: None
-            height: 200
+            size_hint: (1, 0.3)
         GridLayout:
             cols: 2
             size_hint_y: None
@@ -366,10 +366,6 @@
             size_hint_y: None
             size_hint: (1, 0.2)
         Label:
-            text: '*Linux uses last modified date, Windows uses creation date'
-            size_hint_y: None
-            size_hint: (1, 0.1)
-        Label:
             text: '*If only part of the date is entered, the rest will be filled with 0 or 1'
             size_hint_y: None
             size_hint: (1, 0.2)
@@ -448,18 +444,32 @@
             font_size: 35
             color: (0,0,1,1)
             size_hint_y: None
-            size_hint: (1, 0.3)
+            size_hint: (1, 0.1)
+        Label:
+            text: 'Click inside the text input and scroll using the arrows'
+            size_hint_y: None
+            size_hint: (1, 0.2)
         TextInput:
             multiline: True
             id: content
             text: ''
             font_size: 20
-                
-        StyledButton:
-            text: 'Close'
-            on_press: root.dismiss()
+        BoxLayout:
+            orientation: 'horizontal'
             size_hint_y: None
             height: 50
+            padding: 10
+            spacing: 10
+            StyledButton:
+                text: 'Close'
+                on_press: root.dismiss()
+                size_hint_y: None
+                height: 50
+            StyledButton:
+                text: 'Save changes'
+                on_press: root.save()
+                size_hint_y: None
+                height: 50
 
 <SizeWidget>
     height: 50
