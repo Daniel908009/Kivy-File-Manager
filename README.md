@@ -3,7 +3,7 @@
 <p>This project is a file manager app build in Kivy(multiplatform, naturaly resizable framework, that is licensed under the MIT license)</p>
 
 ## Features
-<p>Grouping files based on types, sizes or dates</p>
+<p>Grouping files based on types, sizes or last modified dates</p>
 <p>Finding keywords in files</p>
 
 ## Run using Pypi/HighSeas demo link
@@ -37,7 +37,12 @@ then you can run it with this command: kivy_file_manager_package
 - [X] make a fully working package to Pypi<br>
 - [X] advanced loading of files and directories(was done using recursion)<br>
 - [X] make the functions work with files that have spaces in name, currently this causes an error <br>
-
+- [ ] batch renaming of files, this could use some patterns <br>
+- [ ] duplicate file finder <br>
+- [ ] image previews, this would be simaler to show file <br>
+- [ ] drag and drop file adding <br>
+- [ ] simpler way to add files <br>
+- [ ] folder size calculator <br>
 <h1>Download instructions</h1>
 *Note the links are instructional images <br>
 **Note the images used bellow are from a different Github repository, however the overall procces is allways the same. <br>
