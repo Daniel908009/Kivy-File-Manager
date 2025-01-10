@@ -43,6 +43,7 @@ then you can run it with this command: kivy_file_manager_package
 - [ ] drag and drop file adding <br>
 - [ ] simpler way to add files <br>
 - [ ] folder size calculator <br>
+- [ ] use threading for loading files to prevent not responding errors <br>
 <h1>Download instructions</h1>
 *Note the links are instructional images <br>
 **Note the images used bellow are from a different Github repository, however the overall procces is allways the same. <br>
