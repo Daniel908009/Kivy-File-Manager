@@ -19,31 +19,28 @@ class ThreadHandler:
         self.path = None
         self.caller = None
         self.running = True
+        self.loaded = False
         self.all_selected_files = []
         self.thread.start()
     def loadingThread(self):
         while self.running:
-            print("loading")
             time.sleep(0.2)
             if self.path != None:
                 p = self.path
                 self.path = None
                 self.selectRecursive(p)
-                print("all selected files: ", self.all_selected_files)
+                self.loaded = True
     def sendInfo(self, path, caller):
         self.path = path
         self.caller = caller
     def selectRecursive(self, path):
+        time.sleep(0.001)
         if os.path.isdir(path):
             files = os.listdir(path) 
             for thing in files:
                 self.selectRecursive(path + "/" + thing)
         else:
-            #name = path.split("/")[-1]
-            #file_widget = FileWidget(path, name, self.caller)
-            #self.caller.ids.selected.add_widget(file_widget)
             self.all_selected_files.append(path)
-            #self.caller.ids.selected.height += 70
 loadingThread = ThreadHandler()
 
 # popup that is used for selecting files in the key word search screen, maybe will be enhanced to cover both screens in the future
@@ -80,26 +77,28 @@ class File_selecting_popup(Popup):
         elif type == "current":
             self.caller.ids.selected_files_title.text = "Selected Files"
             loadingThread.sendInfo(current_directory, self)
-        #widget = LoadingWidget(self.caller)
-        #Clock.schedule_interval(widget.textChange, 0.1)
-        #self.caller.ids.selected.add_widget(widget)
-        #self.caller.ids.selected.height += 70
+        self.widget = LoadingWidget(self.caller)
+        Clock.schedule_interval(self.widget.textChange, 0.2)
+        self.caller.ids.selected.add_widget(self.widget)
+        self.caller.ids.selected.height += 70
+        Clock.schedule_interval(self.checkLoading, 0.5)
         self.dismiss()
-        #self.caller.ids.selected.remove_widget(widget)
-        #self.caller.ids.selected.height -= 70
-        #Clock.unschedule(widget.textChange)
-        #self.dismiss()
-    #def selectRecursive(self, path):
-    #    if os.path.isdir(path):
-    #        files = os.listdir(path) 
-    #        for thing in files:
-    #            self.selectRecursive(path + "/" + thing)
-    #    else:
-    #        name = path.split("/")[-1]
-    #        file_widget = FileWidget(path, name, self.caller)
-    #        self.caller.ids.selected.add_widget(file_widget)
-    #        self.caller.all_selected_files.append(path)
-    #        self.caller.ids.selected.height += 70
+    def checkLoading(self, dt):
+        if loadingThread.loaded:
+            self.caller.ids.selected.remove_widget(self.widget)
+            self.caller.ids.selected.height -= 70
+            Clock.unschedule(self.checkLoading)
+            selected = loadingThread.all_selected_files
+            loadingThread.all_selected_files = []
+            loadingThread.loaded = False
+            for file in selected:
+                self.addFile(file)
+    def addFile(self, path):
+        name = path.split("/")[-1]
+        file_widget = FileWidget(path, name, self.caller)
+        self.caller.ids.selected.add_widget(file_widget)
+        self.caller.all_selected_files.append(path)
+        self.caller.ids.selected.height += 70
     
 # widget for the loading texts
 class LoadingWidget(GridLayout):
