@@ -41,7 +41,6 @@ then you can run it with this command: kivy_file_manager_package
 - [X] duplicate file finder <br>
 - [X] image previews, this would be simaler to show file <br>
 - [X] simpler way to add files <br>
-- [ ] folder size calculator <br>
 - [X] order files based on something screen <br>
 - [X] use threading for loading files to prevent not responding errors <br>
 - [X] better file selecting popup <br>
