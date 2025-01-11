@@ -42,6 +42,7 @@ then you can run it with this command: kivy_file_manager_package
 - [X] image previews, this would be simaler to show file <br>
 - [X] simpler way to add files <br>
 - [ ] folder size calculator <br>
+- [ ] order files based on something screen <br>
 - [X] use threading for loading files to prevent not responding errors <br>
 - [X] better file selecting popup <br>
 - [X] overall improvements in code and UI <br>
