@@ -1,12 +1,50 @@
-from kivy.uix.actionbar import Label
 from kivy.uix.gridlayout import GridLayout
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager, Screen, SlideTransition
 from kivy.uix.popup import Popup
+from kivy.uix.filechooser import FileChooserListView
+from kivy.uix.filechooser import FileChooserIconView
+from kivy.clock import Clock
+import threading
+import time
 import os
 import shutil
 # getting the current directory
 current_directory = os.getcwd()
+
+# this is bit weird way to do this but here is a class that works as a thread handler
+class ThreadHandler:
+    def __init__(self):
+        self.thread = threading.Thread(target=self.loadingThread)
+        self.path = None
+        self.caller = None
+        self.running = True
+        self.all_selected_files = []
+        self.thread.start()
+    def loadingThread(self):
+        while self.running:
+            print("loading")
+            time.sleep(0.2)
+            if self.path != None:
+                p = self.path
+                self.path = None
+                self.selectRecursive(p)
+                print("all selected files: ", self.all_selected_files)
+    def sendInfo(self, path, caller):
+        self.path = path
+        self.caller = caller
+    def selectRecursive(self, path):
+        if os.path.isdir(path):
+            files = os.listdir(path) 
+            for thing in files:
+                self.selectRecursive(path + "/" + thing)
+        else:
+            #name = path.split("/")[-1]
+            #file_widget = FileWidget(path, name, self.caller)
+            #self.caller.ids.selected.add_widget(file_widget)
+            self.all_selected_files.append(path)
+            #self.caller.ids.selected.height += 70
+loadingThread = ThreadHandler()
 
 # popup that is used for selecting files in the key word search screen, maybe will be enhanced to cover both screens in the future
 class File_selecting_popup(Popup):
@@ -21,25 +59,58 @@ class File_selecting_popup(Popup):
     def cancel(self):
         self.dismiss()
 
-    def select(self):
-        self.caller.ids.selected_files_title.text = "Selected Files"
-        # getting the selected files
-        selected_files = self.ids.filechooser.selection
-        for file in selected_files:
-            if file not in self.caller.all_selected_files:
-                self.selectRecursive(file)
-        self.dismiss()
-    def selectRecursive(self, path):
-        if os.path.isdir(path):
-            files = os.listdir(path) 
-            for thing in files:
-                self.selectRecursive(path + "/" + thing)
+    def change_selector(self):
+        if self.ids.selector.text == "Graphic":
+            self.ids.filechooser_layout.clear_widgets()
+            self.ids.filechooser_layout.add_widget(FileChooserIconView(path=current_directory))
         else:
-            name = path.split("/")[-1]
-            file_widget = FileWidget(path, name, self.caller)
-            self.caller.ids.selected.add_widget(file_widget)
-            self.caller.all_selected_files.append(path)
-            self.caller.ids.selected.height += 70
+            self.ids.filechooser_layout.clear_widgets()
+            self.ids.filechooser_layout.add_widget(FileChooserListView(path=current_directory))
+        
+    def select(self, type):
+        if self.ids.filechooser.selection == [] and type != "current":
+            return
+        if type == "selected":
+            self.caller.ids.selected_files_title.text = "Selected Files"
+            # getting the selected files
+            selected_files = self.ids.filechooser.selection
+            for file in selected_files:
+                if file not in self.caller.all_selected_files:
+                    loadingThread.sendInfo(file, self)
+        elif type == "current":
+            self.caller.ids.selected_files_title.text = "Selected Files"
+            loadingThread.sendInfo(current_directory, self)
+        #widget = LoadingWidget(self.caller)
+        #Clock.schedule_interval(widget.textChange, 0.1)
+        #self.caller.ids.selected.add_widget(widget)
+        #self.caller.ids.selected.height += 70
+        self.dismiss()
+        #self.caller.ids.selected.remove_widget(widget)
+        #self.caller.ids.selected.height -= 70
+        #Clock.unschedule(widget.textChange)
+        #self.dismiss()
+    #def selectRecursive(self, path):
+    #    if os.path.isdir(path):
+    #        files = os.listdir(path) 
+    #        for thing in files:
+    #            self.selectRecursive(path + "/" + thing)
+    #    else:
+    #        name = path.split("/")[-1]
+    #        file_widget = FileWidget(path, name, self.caller)
+    #        self.caller.ids.selected.add_widget(file_widget)
+    #        self.caller.all_selected_files.append(path)
+    #        self.caller.ids.selected.height += 70
+    
+# widget for the loading texts
+class LoadingWidget(GridLayout):
+    def __init__(self, caller):
+        super().__init__()
+        self.caller = caller
+        self.loadingTexts = ["|", "/", "-", "\\"]
+    def textChange(self, dt):
+        if self.ids.loadingSign.text == self.loadingTexts[-1]:
+            self.ids.loadingSign.text = self.loadingTexts[0]
+        self.ids.loadingSign.text = self.loadingTexts[self.loadingTexts.index(self.ids.loadingSign.text) + 1]
 
 # widget for displaying selected files in the scroll view
 class FileWidget(GridLayout):
@@ -61,7 +132,7 @@ class FileWidget(GridLayout):
 class Key_Word_SearchScreen(Screen):
 
     def main_menu_screen(self):
-        self.manager.transition = SlideTransition(direction='left')
+        self.manager.transition = SlideTransition(direction='up')
         self.manager.transition.duration = 1.5
         self.manager.current = 'main'
 
@@ -69,6 +140,11 @@ class Key_Word_SearchScreen(Screen):
         self.manager.transition = SlideTransition(direction='right')
         self.manager.transition.duration = 1.5
         self.manager.current = 'file_sort'
+
+    def find_duplicates_screen(self):
+        self.manager.transition = SlideTransition(direction='left')
+        self.manager.transition.duration = 1.5
+        self.manager.current = 'find_duplicates'
 
     def select_directories(self):
         popup = File_selecting_popup(self, None)
@@ -82,15 +158,18 @@ class Key_Word_SearchScreen(Screen):
         if len(self.all_selected_files) > 0 and keywords != ['']:
             for file_path in self.all_selected_files:
                 temp = 0
-                for keyword in keywords:
-                    file = open(file_path, "r")
-                    lines = file.readlines()
-                    for line in lines:
-                        for word in line.split(" "):
-                            if keyword in word:
-                                temp += 1
-                    file.close()
-                name = file.name.split("/")[-1]
+                if file_path.endswith(".png") or file_path.endswith(".jpg") or file_path.endswith(".jpeg") or file_path.endswith(".gif") or file_path.endswith(".bmp") or file_path.endswith(".tiff"):
+                    pass
+                else:
+                    for keyword in keywords:
+                        file = open(file_path, "r")
+                        lines = file.readlines()
+                        for line in lines:
+                            for word in line.split(" "):
+                                if keyword in word:
+                                    temp += 1
+                        file.close()
+                name = file_path.split("/")[-1]
                 results.append([name, temp])
             res_pop = KeyWordsResults(results, self.all_selected_files)
             res_pop.open()
@@ -119,8 +198,20 @@ class ResultWidget(GridLayout):
             self.ids.count.color = 0, 1, 0, 1
             self.ids.name.color = 0, 1, 0, 1
     def show_file(self):
-        popup = FileContentPopup(self.path)
+        if self.path.endswith(".png") or self.path.endswith(".jpg") or self.path.endswith(".jpeg") or self.path.endswith(".gif") or self.path.endswith(".bmp") or self.path.endswith(".tiff"):
+            popup = ImageContentPopup(self.path)
+        elif self.path.endswith(".mp4") or self.path.endswith(".avi") or self.path.endswith(".mkv") or self.path.endswith(".mov") or self.path.endswith(".flv") or self.path.endswith(".wmv"):
+            pass # there will be no video player, because it is too complicated and not useful anyway
+        else:
+            popup = FileContentPopup(self.path)
         popup.open()
+
+# popup for displaying the content of an image
+class ImageContentPopup(Popup):
+    def __init__(self, path):
+        super().__init__()
+        self.path = path
+        self.ids.content.source = path
 
 # popup for displaying the content of a file
 class FileContentPopup(Popup):
@@ -144,14 +235,19 @@ class FileContentPopup(Popup):
 class File_SortScreen(Screen):
 
     def main_menu_screen(self):
-        self.manager.transition = SlideTransition(direction='right')
+        self.manager.transition = SlideTransition(direction='up')
         self.manager.transition.duration = 1.5
         self.manager.current = 'main'
 
     def find_keywords_screen(self):
-        self.manager.transition = SlideTransition(direction='left')
+        self.manager.transition = SlideTransition(direction='right')
         self.manager.transition.duration = 1.5
         self.manager.current = 'key_word_search'
+
+    def find_duplicates_screen(self):
+        self.manager.transition = SlideTransition(direction='left')
+        self.manager.transition.duration = 1.5
+        self.manager.current = 'find_duplicates'
 
     def select_directories(self):
         popup = File_selecting_popup(self, None)
@@ -379,9 +475,37 @@ class MainScreen(Screen):
         self.manager.current = 'key_word_search'
 
     def sort_files_screen(self):
-        self.manager.transition = SlideTransition(direction='left')
+        self.manager.transition = SlideTransition(direction='right')
         self.manager.transition.duration = 1.5
         self.manager.current = 'file_sort'
+
+    def find_duplicates_screen(self):
+        self.manager.transition = SlideTransition(direction='left')
+        self.manager.transition.duration = 1.5
+        self.manager.current = 'find_duplicates'
+
+# screen for finding duplicate files
+class Find_DuplicatesScreen(Screen):
+
+    def main_menu_screen(self):
+        self.manager.transition = SlideTransition(direction="up")
+        self.manager.transition.duration = 1.5
+        self.manager.current = "main"
+    def find_keywords_screen(self):
+        self.manager.transition = SlideTransition(direction='left')
+        self.manager.transition.duration = 1.5
+        self.manager.current = 'key_word_search'
+    def sort_files_screen(self):
+        self.manager.transition = SlideTransition(direction='right')
+        self.manager.transition.duration = 1.5
+        self.manager.current = 'file_sort'
+
+    def select_directories(self):
+        popup = File_selecting_popup(self, None)
+        popup.open()
+
+    def search(self):
+        pass
 
 # app class with the screen manager
 class File_ManagerApp(App):
@@ -392,9 +516,12 @@ class File_ManagerApp(App):
         sm.add_widget(MainScreen(name='main'))
         sm.add_widget(Key_Word_SearchScreen(name='key_word_search'))
         sm.add_widget(File_SortScreen(name='file_sort'))
+        sm.add_widget(Find_DuplicatesScreen(name='find_duplicates'))
 
         return sm
     
 # running the app
 if __name__ == "__main__":
     File_ManagerApp().run()
+
+loadingThread.running = False

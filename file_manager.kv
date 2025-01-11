@@ -17,7 +17,7 @@
             size_hint_y: None
             size_hint: (1, 0.3)
         GridLayout:
-            cols: 2
+            cols: 3
             size_hint_y: None
             padding: 20
             StyledButton:
@@ -28,6 +28,11 @@
             StyledButton:
                 text: 'Sort Files'
                 on_press: root.sort_files_screen()
+                size_hint: (0.5, 0.5)
+                padding: 10
+            StyledButton:
+                text: 'Find Duplicates'
+                on_press: root.find_duplicates_screen()
                 size_hint: (0.5, 0.5)
                 padding: 10
 
@@ -100,17 +105,22 @@
                     size_hint_y: None
                     height: 30
         GridLayout:
-            cols: 2
+            cols: 3
             size_hint_y: None
             padding: 20
+            StyledButton:
+                text: 'Find Keywords'
+                on_press: root.find_keywords_screen()
+                size_hint: (0.5, 0.5)
+                padding: 10
             StyledButton:
                 text: 'Main Menu'
                 on_press: root.main_menu_screen()
                 size_hint: (0.5, 0.5)
                 padding: 10
             StyledButton:
-                text: 'Find Keywords'
-                on_press: root.find_keywords_screen()
+                text: 'Find Duplicates'
+                on_press: root.find_duplicates_screen()
                 size_hint: (0.5, 0.5)
                 padding: 10
 
@@ -170,7 +180,7 @@
                     size_hint_y: None
                     height: 30
         GridLayout:
-            cols: 2
+            cols: 3
             size_hint_y: None
             padding: 20
             StyledButton:
@@ -181,6 +191,11 @@
             StyledButton:
                 text: 'Main Menu'
                 on_press: root.main_menu_screen()
+                size_hint: (0.5, 0.5)
+                padding: 10
+            StyledButton:
+                text: 'Find Duplicates'
+                on_press: root.find_duplicates_screen()
                 size_hint: (0.5, 0.5)
                 padding: 10
 
@@ -195,27 +210,55 @@
         padding: 10
         Label:
             text: 'Select directories or files'
-            font_size: 30
+            font_size: 25
+            color: (0,0,1,1)
+            bold: True
             size_hint_y: None
-            size_hint: (1, 0.3)
-        FileChooserListView:
-            id: filechooser
-            dirselect: True
+            size_hint: (1, 0.2)
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint_y: None
+            size_hint: (1, 0.6)
+            id: filechooser_layout
+            FileChooserListView:
+                id: filechooser
+                dirselect: True
         GridLayout:
             cols: 2
             size_hint_y: None
-            padding: 20
+            size_hint: (1, 0.2)
+            padding: (10,0)
+            spacing: 3
+            Label:
+                text: 'Which file selector to use?'
+            Spinner:
+                id: selector
+                text: 'List'
+                values: ['List', 'Graphic']
+                size_hint_y: None
+                size_hint: (1, 0.5)
+                on_text: root.change_selector()
+            Label:
+                text: 'select all files in apps directory?'
+            StyledButton:
+                text: 'Select'
+                on_press: root.select("current")
+                size_hint_y: None
+                size_hint: (1, 0.5)
+        GridLayout:
+            cols: 2
+            size_hint_y: None
+            size_hint: (1, 0.2)
+            padding: 10
             spacing: 10
             StyledButton:
                 text: 'Cancel'
                 on_press: root.cancel()
                 size_hint: (0.5, 0.5)
-                padding: 10
             StyledButton:
                 text: 'Select'
-                on_press: root.select()
+                on_press: root.select("selected")
                 size_hint: (0.5, 0.5)
-                padding: 10
 
 # popup that contains all the results of the keyword search
 <KeyWordsResults>
@@ -287,6 +330,17 @@
     StyledButton:
         text: 'Remove'
         on_press: root.remove_file()
+        size_hint_x: 0.5
+
+# loading files widget
+<LoadingWidget>
+    cols: 2
+    Label:
+        text: 'Loading files'
+        size_hint_x: 0.5
+    Label:
+        id: loadingSign
+        text: '|'
         size_hint_x: 0.5
 
 # this popup is used to get the size bariers for the sorting by size option
@@ -431,6 +485,35 @@
         on_press: root.remove()
         size_hint_x: 0.5
 
+<ImageContentPopup>
+    title: 'Content of the image'
+    size_hint: (0.9, 0.9)
+    auto_dismiss: False
+    BoxLayout:
+        orientation: 'vertical'
+        padding: 10
+        spacing: 10
+        Label:
+            text: 'Content of the image'
+            font_size: 35
+            color: (0,0,1,1)
+            size_hint_y: None
+            size_hint: (1, 0.1)
+        Image:
+            id: content
+            source: ''
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: 50
+            padding: 10
+            spacing: 10
+            StyledButton:
+                text: 'Close'
+                on_press: root.dismiss()
+                size_hint_y: None
+                height: 50
+
 <FileContentPopup>
     title: 'File Content'
     size_hint: (0.9,0.9)
@@ -470,6 +553,71 @@
                 on_press: root.save()
                 size_hint_y: None
                 height: 50
+
+<Find_DuplicatesScreen>
+    all_selected_files: []
+    BoxLayout:
+        orientation: 'vertical'
+        size_hint: (1, 1)
+        Label:
+            text: 'Find duplicates'
+            font_size: 40
+            height: 40
+            size_hint_y: None
+            size_hint: (1, 0.2)
+        BoxLayout:
+            orientation: 'vertical'
+            padding: 10
+            spacing: 10
+            GridLayout:
+                cols: 2
+                size_hint_y: None
+                Label:
+                    text: 'Which directories should be checked?'
+                    size_hint_y: None
+                    height: 45
+                StyledButton:
+                    text: 'Select directories/files'
+                    on_press: root.select_directories()
+                    size_hint_y: None
+                    height: 45
+            StyledButton:
+                text: 'Search'
+                on_press: root.search()
+                size_hint_y: None
+                height: 50
+        ScrollView:
+            GridLayout:
+                id: selected
+                cols: 1
+                size_hint_y: None
+                height: 0
+                padding: 10
+                spacing: 10
+                Label:
+                    id: selected_files_title
+                    text: 'Selected files will be here'
+                    size_hint_y: None
+                    height: 30
+        GridLayout:
+            cols: 3
+            size_hint_y: None
+            padding: 20
+            StyledButton:
+                text: 'Find Keywords'
+                on_press: root.find_keywords_screen()
+                size_hint: (0.5, 0.5)
+                padding: 10
+            StyledButton:
+                text: 'Main Menu'
+                on_press: root.main_menu_screen()
+                size_hint: (0.5, 0.5)
+                padding: 10
+            StyledButton:
+                text: 'Sort Files'
+                on_press: root.sort_files_screen()
+                size_hint: (0.5, 0.5)
+                padding: 10
 
 <SizeWidget>
     height: 50
