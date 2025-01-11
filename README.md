@@ -38,6 +38,7 @@ then you can run it with this command: kivy_file_manager_package
 - [X] advanced loading of files and directories(was done using recursion)<br>
 - [X] make the functions work with files that have spaces in name, currently this causes an error <br>
 - [ ] batch renaming of files, this could use some patterns <br>
+- [ ] customize the spinner options design <br>
 - [X] duplicate file finder <br>
 - [X] image previews, this would be simaler to show file <br>
 - [X] simpler way to add files <br>
