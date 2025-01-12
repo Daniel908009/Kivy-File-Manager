@@ -16,9 +16,6 @@ then you can run it with this command: kivy_file_manager_package
 ![image](https://github.com/user-attachments/assets/06285e92-c4a2-4d03-bb12-77d0a652b785)
 ![image](https://github.com/user-attachments/assets/218a6a71-7dd2-4b78-a71c-475875458135)
 ![image](https://github.com/user-attachments/assets/35119025-1513-4723-bc26-68862a30880d)
-![image](https://github.com/user-attachments/assets/3da0c2a1-c157-4b3b-baf5-8229464d3943)
-
-
 
 ## To do
 - [X] All three screens<br>
