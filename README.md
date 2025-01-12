@@ -10,15 +10,14 @@
 simply open your command prompt and enter this command: pip install kivy-file-manager-package <br>
 then you can run it with this command: kivy_file_manager_package
 
-## Screenshots
-![image](https://github.com/user-attachments/assets/b7b29d09-e19b-4976-8ea1-e6286194886e)
-![image](https://github.com/user-attachments/assets/4b60bf78-ba88-4dd2-9648-83cc37e27624)
-![image](https://github.com/user-attachments/assets/eee81a0f-ed1b-47d6-980d-4f3f69977016)
-![image](https://github.com/user-attachments/assets/7a2ad866-61d0-493c-b291-d52d76c3d557)
-![image](https://github.com/user-attachments/assets/b60b937d-6e3a-4366-988c-5f1be133673e)
-<p>This entering menu is pretty much the same as the entering menu for the size bariers.</p>
+## Screenshots of different screens of the app
+![image](https://github.com/user-attachments/assets/0ecb1078-2057-48e9-93f0-6540ff05b166)
+![image](https://github.com/user-attachments/assets/3c55f316-e113-43f2-8bd3-226e42e19c03)
+![image](https://github.com/user-attachments/assets/06285e92-c4a2-4d03-bb12-77d0a652b785)
+![image](https://github.com/user-attachments/assets/218a6a71-7dd2-4b78-a71c-475875458135)
+![image](https://github.com/user-attachments/assets/35119025-1513-4723-bc26-68862a30880d)
+![image](https://github.com/user-attachments/assets/3da0c2a1-c157-4b3b-baf5-8229464d3943)
 
-![image](https://github.com/user-attachments/assets/33ca566a-6fec-458b-8ce8-ae13f7a484e7)
 
 
 ## To do
@@ -37,8 +36,8 @@ then you can run it with this command: kivy_file_manager_package
 - [X] make a fully working package to Pypi<br>
 - [X] advanced loading of files and directories(was done using recursion)<br>
 - [X] make the functions work with files that have spaces in name, currently this causes an error <br>
-- [ ] batch renaming of files, this could use some patterns <br>
-- [ ] customize the spinner options design <br>
+- [X] batch renaming of files, this could use some patterns <br>
+- [X] customize the spinner options design <br>
 - [X] duplicate file finder <br>
 - [X] image previews, this would be simaler to show file <br>
 - [X] simpler way to add files <br>
