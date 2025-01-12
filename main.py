@@ -1,3 +1,4 @@
+from kivy.uix.actionbar import Label
 from kivy.uix.gridlayout import GridLayout
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager, Screen, SlideTransition
@@ -5,6 +6,7 @@ from kivy.uix.popup import Popup
 from kivy.uix.filechooser import FileChooserListView
 from kivy.uix.filechooser import FileChooserIconView
 from kivy.clock import Clock
+import hashlib
 import threading
 import time
 import os
@@ -40,16 +42,18 @@ class ThreadHandler:
             for thing in files:
                 self.selectRecursive(path + "/" + thing)
         else:
-            self.all_selected_files.append(path)
+            if path not in self.all_selected_files:
+                self.all_selected_files.append(path)
 loadingThread = ThreadHandler()
 
 # popup that is used for selecting files in the key word search screen, maybe will be enhanced to cover both screens in the future
 class File_selecting_popup(Popup):
     
-    def __init__(self, caller, filter_files):
+    def __init__(self, caller, filter_files, widget):
         super().__init__()
         self.caller = caller
         self.ids.filechooser.path = current_directory
+        self.WidgetGiven = widget
         if filter_files != None:
             self.ids.filechooser.filters = [filter_files]
 
@@ -85,21 +89,49 @@ class File_selecting_popup(Popup):
         self.dismiss()
     def checkLoading(self, dt):
         if loadingThread.loaded:
-            self.caller.ids.selected.remove_widget(self.widget)
-            self.caller.ids.selected.height -= 70
-            Clock.unschedule(self.checkLoading)
-            selected = loadingThread.all_selected_files
-            loadingThread.all_selected_files = []
-            loadingThread.loaded = False
-            for file in selected:
-                self.addFile(file)
+            if len(loadingThread.all_selected_files) + len(self.caller.all_selected_files) < 30:
+                self.caller.ids.selected.remove_widget(self.widget)
+                self.caller.ids.selected.height -= 70
+                Clock.unschedule(self.checkLoading)
+                selected = loadingThread.all_selected_files
+                loadingThread.all_selected_files = []
+                loadingThread.loaded = False
+                for file in selected:
+                    self.addFile(file)
+            else:
+                self.caller.ids.selected.remove_widget(self.widget)
+                self.caller.ids.selected.height -= 70
+                Clock.unschedule(self.checkLoading)
+                selected = loadingThread.all_selected_files
+                for file in selected:
+                    self.caller.all_selected_files.append(file)
+                for widget in self.caller.ids.selected.children:
+                    if widget != self.caller.ids.selected_files_title:
+                        self.caller.ids.selected.remove_widget(widget)
+                        self.caller.ids.selected.height -= 70
+                self.caller.ids.selected.add_widget(OverFlowWidget(self.caller))
+                self.caller.ids.selected.height += 100
+                loadingThread.all_selected_files = []
+                self.caller.ids.selected_files_title.text = "Selected Files"
     def addFile(self, path):
         name = path.split("/")[-1]
-        file_widget = FileWidget(path, name, self.caller)
+        file_widget = self.WidgetGiven(path, name, self.caller)
         self.caller.ids.selected.add_widget(file_widget)
         self.caller.all_selected_files.append(path)
-        self.caller.ids.selected.height += 70
-    
+        self.caller.ids.selected.height += 60
+
+# widget used when a lot of files are selected
+class OverFlowWidget(GridLayout):
+    def __init__(self, caller):
+        super().__init__()
+        self.caller = caller
+        self.ids.name.text = "Too many files to display, selected " + str(len(self.caller.all_selected_files)) + " files"
+    def remove_all(self):
+        self.caller.ids.selected.clear_widgets()
+        self.caller.all_selected_files = []
+        self.caller.ids.selected.height = 70
+        self.caller.ids.selected_files_title.text = "Selected files will be here"
+
 # widget for the loading texts
 class LoadingWidget(GridLayout):
     def __init__(self, caller):
@@ -123,7 +155,7 @@ class FileWidget(GridLayout):
     def remove_file(self):
         self.caller.ids.selected.remove_widget(self)
         self.caller.all_selected_files.remove(self.path)
-        self.caller.ids.selected.height -= 70
+        self.caller.ids.selected.height -= 60
         if len(self.caller.all_selected_files) == 0:
             self.caller.ids.selected_files_title.text = "Selected files will be here"
 
@@ -145,8 +177,18 @@ class Key_Word_SearchScreen(Screen):
         self.manager.transition.duration = 1.5
         self.manager.current = 'find_duplicates'
 
+    def order_files(self):
+        self.manager.transition = SlideTransition(direction='left')
+        self.manager.transition.duration = 1.5
+        self.manager.current = 'order_files'
+
+    def rename_files_screen(self):
+        self.manager.transition = SlideTransition(direction='left')
+        self.manager.transition.duration = 1.5
+        self.manager.current = 'batch_renaming'
+
     def select_directories(self):
-        popup = File_selecting_popup(self, None)
+        popup = File_selecting_popup(self, None, FileWidget)
         popup.open()
 
     def search(self):
@@ -248,8 +290,18 @@ class File_SortScreen(Screen):
         self.manager.transition.duration = 1.5
         self.manager.current = 'find_duplicates'
 
+    def order_files(self):
+        self.manager.transition = SlideTransition(direction='left')
+        self.manager.transition.duration = 1.5
+        self.manager.current = 'order_files'
+
+    def rename_files_screen(self):
+        self.manager.transition = SlideTransition(direction='left')
+        self.manager.transition.duration = 1.5
+        self.manager.current = 'batch_renaming'
+
     def select_directories(self):
-        popup = File_selecting_popup(self, None)
+        popup = File_selecting_popup(self, None, FileWidget)
         popup.open()
 
     def sort(self):
@@ -483,6 +535,16 @@ class MainScreen(Screen):
         self.manager.transition.duration = 1.5
         self.manager.current = 'find_duplicates'
 
+    def order_files(self):
+        self.manager.transition = SlideTransition(direction='left')
+        self.manager.transition.duration = 1.5
+        self.manager.current = 'order_files'
+
+    def rename_files_screen(self):
+        self.manager.transition = SlideTransition(direction='left')
+        self.manager.transition.duration = 1.5
+        self.manager.current = 'batch_renaming'
+
 # screen for finding duplicate files
 class Find_DuplicatesScreen(Screen):
 
@@ -498,13 +560,288 @@ class Find_DuplicatesScreen(Screen):
         self.manager.transition = SlideTransition(direction='right')
         self.manager.transition.duration = 1.5
         self.manager.current = 'file_sort'
+    def order_files(self):
+        self.manager.transition = SlideTransition(direction='left')
+        self.manager.transition.duration = 1.5
+        self.manager.current = 'order_files'
+    def rename_files_screen(self):
+        self.manager.transition = SlideTransition(direction='left')
+        self.manager.transition.duration = 1.5
+        self.manager.current = 'batch_renaming'
 
     def select_directories(self):
-        popup = File_selecting_popup(self, None)
+        popup = File_selecting_popup(self, None, FileWidget)
         popup.open()
 
     def search(self):
-        pass
+        if len(self.all_selected_files) > 0:
+            results = []
+            for file in self.all_selected_files:
+                name = file.split("/")[-1]
+                hash = hashlib.md5(open(file, "rb").read()).hexdigest()
+                results.append([name, hash, file])
+            duplicates = []
+            ignore = []
+            for result in results:
+                temp = 1
+                paths = [result[2]]
+                for res in results:
+                    if result != res:
+                        if result[1] == res[1]:
+                            if result[0] not in ignore and res[0] not in ignore:
+                                temp += 1
+                                ignore.append(result[0])
+                                paths.append(res[2])
+                if temp > 1:
+                    duplicates.append([result[0], temp, result[1], paths])
+            res_pop = DuplicatesResults(duplicates)
+            res_pop.open()
+
+# popup for displaying the results of the duplicate search
+class DuplicatesResults(Popup):
+    def __init__(self, results):
+        super().__init__()
+        self.ids.results_search.clear_widgets()
+        if len(results) != 0:
+            for result in results:
+                result_widget = DuplicateSearchResultWidget(self, result[0], result[1], result[3][0], result[3]) # bit weird way to do it but it works
+                self.ids.results_search.add_widget(result_widget)
+                self.ids.results_search.height += 70
+        else:
+            self.ids.results_search.add_widget(Label(text="No duplicates found"))
+            self.ids.results_search.height += 70
+
+# widget used for displaying the results of the duplicate search and for giving the options of what to do with the duplicates
+class DuplicateSearchResultWidget(GridLayout):
+    def __init__(self, caller, name, number, path, paths):
+        super().__init__()
+        self.caller = caller
+        self.ids.name.text = name
+        self.ids.numberOfDuplicates.text = str(number)
+        self.path = path
+        self.paths = paths
+    def show_file(self):
+        if self.path.endswith(".png") or self.path.endswith(".jpg") or self.path.endswith(".jpeg") or self.path.endswith(".gif") or self.path.endswith(".bmp") or self.path.endswith(".tiff"):
+            popup = ImageContentPopup(self.path)
+        elif self.path.endswith(".mp4") or self.path.endswith(".avi") or self.path.endswith(".mkv") or self.path.endswith(".mov") or self.path.endswith(".flv") or self.path.endswith(".wmv"):
+            pass
+        else:
+            popup = FileContentPopup(self.path)
+        popup.open()
+    def action(self):
+        if self.ids.action.text == "Delete duplicates":
+            for path in self.paths:
+                try:
+                    os.remove(path)
+                    self.caller.ids.results_search.remove_widget(self)
+                except:
+                    pass
+        else:
+            self.caller.ids.results_search.remove_widget(self)
+
+# screen with different ordering options, this is different from the sorting screen because this is not actually moving the files, it only displays them ordered, for example from largest to smallest file
+class OrderFilesScreen(Screen):
+    def main_menu_screen(self):
+        self.manager.transition = SlideTransition(direction="up")
+        self.manager.transition.duration = 1.5
+        self.manager.current = "main"
+    def find_keywords_screen(self):
+        self.manager.transition = SlideTransition(direction='left')
+        self.manager.transition.duration = 1.5
+        self.manager.current = 'key_word_search'
+    def sort_files_screen(self):
+        self.manager.transition = SlideTransition(direction='right')
+        self.manager.transition.duration = 1.5
+        self.manager.current = 'file_sort'
+    def find_duplicates_screen(self):
+        self.manager.transition = SlideTransition(direction='left')
+        self.manager.transition.duration = 1.5
+        self.manager.current = 'find_duplicates'
+    def rename_files_screen(self):
+        self.manager.transition = SlideTransition(direction='right')
+        self.manager.transition.duration = 1.5
+        self.manager.current = 'batch_renaming'
+
+    def select_directories(self):
+        popup = File_selecting_popup(self, None, FileWidget)
+        popup.open()
+    
+    def order(self):
+        if len(self.all_selected_files) > 0 and self.ids.ascending.text != "Select order" and self.ids.order_by.text != "Select order":
+            # saving the old list and clearing the screen
+            old_list = []
+            for file in self.ids.selected.children:
+                if file != self.ids.selected_files_title:
+                    old_list.append(file.path)
+            temp = []
+            for widget in self.ids.selected.children:
+                if widget != self.ids.selected_files_title:
+                    temp.append(widget)
+            for widget in temp: # this has to be done in two seperate loops otherwise only half of the widgets would be removed
+                self.ids.selected.remove_widget(widget)
+                self.ids.selected.height -= 60
+            # ordering the list of files
+            if self.ids.order_by.text == "Size":
+                self.order_by_size(old_list)
+            elif self.ids.order_by.text == "Date":
+                self.order_by_date(old_list)
+            elif self.ids.order_by.text == "Name":
+                self.order_by_name(old_list)
+
+    def order_by_size(self, old_list):
+        sizes = []
+        for file in old_list:
+            sizes.append([file, os.path.getsize(file)])
+        sizes.sort(key=lambda x: x[1])
+        if self.ids.ascending.text == "Descending":
+            sizes.reverse()
+        for size in sizes:
+            file_widget = FileWidget(size[0], size[0].split("/")[-1], self)
+            file_widget.ids.size.text = str(size[1]) + " bytes"
+            self.ids.selected.add_widget(file_widget)
+            self.ids.selected.height += 60
+    def order_by_date(self, old_list):
+        dates = []
+        for file in old_list:
+            dates.append([file, os.path.getmtime(file)])
+        dates.sort(key=lambda x: x[1])
+        if self.ids.ascending.text == "Descending":
+            dates.reverse()
+        for date in dates:
+            file_widget = FileWidget(date[0], date[0].split("/")[-1], self)
+            timeText = time.ctime(date[1])
+            file_widget.ids.size.text = str(timeText)
+            self.ids.selected.add_widget(file_widget)
+            self.ids.selected.height += 60
+    def order_by_name(self, old_list): # or in other words its sorted alphabetically
+        names = []
+        for file in old_list:
+            names.append([file, file.split("/")[-1]])
+        names.sort(key=lambda x: x[1])
+        if self.ids.ascending.text == "Descending":
+            names.reverse()
+        for name in names:
+            file_widget = FileWidget(name[0], name[0].split("/")[-1], self)
+            self.ids.selected.add_widget(file_widget)
+            self.ids.selected.height += 60
+
+# class of the renaming window
+class BatchRenamingScreen(Screen):
+    def main_menu_screen(self):
+        self.manager.transition = SlideTransition(direction="up")
+        self.manager.transition.duration = 1.5
+        self.manager.current = "main"
+    def find_keywords_screen(self):
+        self.manager.transition = SlideTransition(direction='right')
+        self.manager.transition.duration = 1.5
+        self.manager.current = 'key_word_search'
+    def sort_files_screen(self):
+        self.manager.transition = SlideTransition(direction='right')
+        self.manager.transition.duration = 1.5
+        self.manager.current = 'file_sort'
+    def find_duplicates_screen(self):
+        self.manager.transition = SlideTransition(direction='right')
+        self.manager.transition.duration = 1.5
+        self.manager.current = 'find_duplicates'
+    def order_files(self):
+        self.manager.transition = SlideTransition(direction='left')
+        self.manager.transition.duration = 1.5
+        self.manager.current = 'order_files'
+    
+    def select_directories(self):
+        popup = File_selecting_popup(self, None, RenamingWidget)
+        popup.open()
+
+    def rename(self):
+        if len(self.all_selected_files) > 0 and self.ids.baseName.text != "" and self.ids.numbering.text != "Select method":
+            if self.ids.numbering.text == "Using numbers":
+                self.renameNumbers()
+            elif self.ids.numbering.text == "Using letters":
+                self.renameLetters()
+            self.ids.baseName.text = ""
+            self.ids.numbering.text = "Select method"
+            self.all_selected_files = []
+            widgettoremove = []
+            for widget in self.ids.selected.children:
+                if widget != self.ids.selected_files_title:
+                    widgettoremove.append(widget)
+            for widget in widgettoremove:
+                self.ids.selected.remove_widget(widget)
+                self.ids.selected.height -= 60
+
+    def renameNumbers(self):
+        name = self.ids.baseName.text
+        number = 1
+        for file in self.all_selected_files:
+            extension = file.split("/")[-1].split(".")[-1]
+            filesDirectory = file.split("/")[:-1]
+            os.rename(file, "/".join(filesDirectory) + "/" + name + str(number) + "." + extension)
+            number += 1
+
+    def renameLetters(self):
+        alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"] # there is probably some way of making this less weird, but this works
+        name = self.ids.baseName.text
+        number = 0
+        baseText = "-"
+        for file in self.all_selected_files:
+            extension = file.split("/")[-1].split(".")[-1]
+            filesDirectory = file.split("/")[:-1]
+            if number == 26:
+                number = 0
+                baseText += alphabet[number]
+            os.rename(file, "/".join(filesDirectory) + "/" + name + baseText + alphabet[number] + "." + extension)
+            number += 1
+
+# renaming widget is basicaly file widget but with two extra buttons for changing the order of the files
+class RenamingWidget(GridLayout):
+    def __init__(self, path, name, caller):
+        super().__init__()
+        self.ids.name.text = name
+        self.path = path
+        self.caller = caller
+    def moveUp(self):
+        index = self.caller.all_selected_files.index(self.path)
+        if index - 1 >= 0:
+            self.caller.all_selected_files = []
+            widgetstoremove = []
+            for widget in self.caller.ids.selected.children:
+                if widget != self.caller.ids.selected_files_title:
+                    self.caller.all_selected_files.append(widget.path)
+                    widgetstoremove.append(widget)
+            self.caller.all_selected_files = reversed(self.caller.all_selected_files)
+            for widget in widgetstoremove: # this has to be a seperate loop because otherwise the list would change while iterating which is no good
+                self.caller.ids.selected.remove_widget(widget)
+                self.caller.ids.selected.height -= 60
+            temp = self.caller.all_selected_files[index - 1]
+            self.caller.all_selected_files[index - 1] = self.caller.all_selected_files[index]
+            self.caller.all_selected_files[index] = temp
+            
+            for file in self.caller.all_selected_files:
+                name = file.split("/")[-1]
+                file_widget = RenamingWidget(file, name, self.caller)
+                self.caller.ids.selected.add_widget(file_widget)
+                self.caller.ids.selected.height += 60
+    def moveDown(self):
+        index = self.caller.all_selected_files.index(self.path)
+        if index + 1 < len(self.caller.all_selected_files):
+            self.caller.all_selected_files = []
+            widgetstoremove = []
+            for widget in self.caller.ids.selected.children:
+                if widget != self.caller.ids.selected_files_title:
+                    self.caller.all_selected_files.append(widget.path)
+                    widgetstoremove.append(widget)
+            self.caller.all_selected_files = reversed(self.caller.all_selected_files)
+            for widget in widgetstoremove:
+                self.caller.ids.selected.remove_widget(widget)
+                self.caller.ids.selected.height -= 60
+            temp = self.caller.all_selected_files[index + 1]
+            self.caller.all_selected_files[index + 1] = self.caller.all_selected_files[index]
+            self.caller.all_selected_files[index] = temp
+            for file in self.caller.all_selected_files:
+                name = file.split("/")[-1]
+                file_widget = RenamingWidget(file, name, self.caller)
+                self.caller.ids.selected.add_widget(file_widget)
+                self.caller.ids.selected.height += 60
 
 # app class with the screen manager
 class File_ManagerApp(App):
@@ -516,7 +853,8 @@ class File_ManagerApp(App):
         sm.add_widget(Key_Word_SearchScreen(name='key_word_search'))
         sm.add_widget(File_SortScreen(name='file_sort'))
         sm.add_widget(Find_DuplicatesScreen(name='find_duplicates'))
-
+        sm.add_widget(OrderFilesScreen(name='order_files'))
+        sm.add_widget(BatchRenamingScreen(name='batch_renaming'))
         return sm
     
 # running the app
